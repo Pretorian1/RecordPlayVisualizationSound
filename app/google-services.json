@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "102974798269",
+    "firebase_url": "https://recordplayvisualizationsound.firebaseio.com",
+    "project_id": "recordplayvisualizationsound",
+    "storage_bucket": "recordplayvisualizationsound.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102974798269:android:c3b6473c0675ea68",
+        "android_client_info": {
+          "package_name": "com.example.max.recordplayvisualizationsound"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "102974798269-g8o9scu3rav4v9f697fem6m4eogl3s9b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm8LcPnWhJD5Dnz75tDQa7BfgdwalaUkY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
