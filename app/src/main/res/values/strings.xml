@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Record Play Visualization Sound</string>
     <string name="banner_ad_unit_id">ca-app-pub-5405208829283027/6064493792</string>
+    <string name="record">Record</string>
+    <string name="stop">STOP</string>
+    <string name="play">Play</string>
+    <string name="stop_playing_recording">STOP PLAYING RECORDING</string>
 </resources>
