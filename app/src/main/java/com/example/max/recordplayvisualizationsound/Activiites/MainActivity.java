@@ -1,4 +1,4 @@
-package com.example.max.recordplayvisualizationsound;
+package com.example.max.recordplayvisualizationsound.Activiites;
 
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
@@ -12,10 +12,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.max.recordplayvisualizationsound.R;
+import com.example.max.recordplayvisualizationsound.Utils.MessageEvent;
+import com.example.max.recordplayvisualizationsound.Utils.Utils;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
-import com.google.firebase.crash.FirebaseCrash;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.io.IOException;
 import java.util.Random;
@@ -60,11 +65,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mAdView.loadAd(adRequest);
     }
 
+    @Subscribe
+    public void onMessageEvent(MessageEvent event){
+        switch (event.message){
+
+        }
+    }
+
     @Override
     public void onClick(View v){
         switch(v.getId()){
             case R.id.button_record:
-                if(checkPermission()) {
+                if(Utils.checkPermission(getApplicationContext())) {
 
                     AudioSavePathInDevice =
                             Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
@@ -116,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
 
                 mediaPlayer.start();
+                mediaPlayer.isPlaying();
                 Toast.makeText(MainActivity.this, "Recording Playing",
                         Toast.LENGTH_LONG).show();
                 break;
@@ -193,12 +206,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public boolean checkPermission() {
+    /*public boolean checkPermission() {
         int result = ContextCompat.checkSelfPermission(getApplicationContext(),
                 WRITE_EXTERNAL_STORAGE);
         int result1 = ContextCompat.checkSelfPermission(getApplicationContext(),
                 RECORD_AUDIO);
         return result == PackageManager.PERMISSION_GRANTED &&
                 result1 == PackageManager.PERMISSION_GRANTED;
+    }*/
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
     }
 }
