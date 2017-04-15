@@ -4,6 +4,7 @@ import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import com.example.max.recordplayvisualizationsound.R;
 import com.example.max.recordplayvisualizationsound.Utils.MessageEvent;
+import com.example.max.recordplayvisualizationsound.Utils.Messages;
 import com.example.max.recordplayvisualizationsound.Utils.Utils;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -46,10 +48,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     String AudioSavePathInDevice = null;//todo refactor later!!!
     MediaRecorder mediaRecorder ;
-    Random random ;
-    String RandomAudioFileName = "ABCDEFGHIJKLMNOP";
+   // Random random ;
+  //  String RandomAudioFileName = "ABCDEFGHIJKLMNOP";
     public static final int RequestPermissionCode = 1;
     MediaPlayer mediaPlayer ;
+    double [] frequency1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {//todo refactor later!!!
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initOnClickListeners();
-        random = new Random();
+       // random = new Random();
       //  FirebaseCrash.report(new Exception("My first Android non-fatal error"));//crash reporting
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-5405208829283027~3111027393");
         AdView mAdView = (AdView) findViewById(R.id.adView);
@@ -68,6 +71,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Subscribe
     public void onMessageEvent(MessageEvent event){
         switch (event.message){
+            case PLAY_SOUND_HAS_ENDED:
+                buttonPlay.setEnabled(true);
+                buttonStopPlayingRecording.setEnabled(false);
+                buttonRecord.setEnabled(true);
+                break;
+            case BLOCK_STOP_HAS_ENDED:
+                buttonStop.setEnabled(true);
+                break;
 
         }
     }
@@ -79,8 +90,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if(Utils.checkPermission(getApplicationContext())) {
 
                     AudioSavePathInDevice =
-                            Environment.getExternalStorageDirectory().getAbsolutePath() + "/" +
-                                    CreateRandomAudioFileName(5) + "AudioRecording.3gp";
+                            Utils.checkCreateFolder(Utils.RECORDS_DIR) +
+                                    Utils.CreateRandomAudioFileName(5) + "AudioRecording.3gp";
 
                     MediaRecorderReady();
 
@@ -88,15 +99,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mediaRecorder.prepare();
                         mediaRecorder.start();
                     } catch (IllegalStateException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
 
                     buttonRecord.setEnabled(false);
-                    buttonStop.setEnabled(true);
+                    Handler handler = new Handler();
+                    Runnable r = new Runnable(){
+                        public void run() {
+                            try {
+                                Thread.sleep(1500);
+                                EventBus.getDefault().post(new MessageEvent(Messages.BLOCK_STOP_HAS_ENDED,null));
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+                    };
+                    handler.post(r);
+                   // buttonStop.setEnabled(true);
 
                     Toast.makeText(MainActivity.this, "Recording started",
                             Toast.LENGTH_LONG).show();
@@ -110,13 +132,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 buttonPlay.setEnabled(true);
                 buttonRecord.setEnabled(true);
                 buttonStopPlayingRecording.setEnabled(false);
-
+               byte [] bytes = Utils.convert3gpToByteArray(AudioSavePathInDevice);
+                frequency1 = Utils.calculateFFT(bytes);
                 Toast.makeText(MainActivity.this, "Recording Completed",
                         Toast.LENGTH_LONG).show();
                 break;
             case R.id.button_play:
                 buttonStop.setEnabled(false);
                 buttonRecord.setEnabled(false);
+                buttonPlay.setEnabled(false);
                 buttonStopPlayingRecording.setEnabled(true);
 
                 mediaPlayer = new MediaPlayer();
@@ -126,9 +150,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
+                int time = mediaPlayer.getDuration();
                 mediaPlayer.start();
-                mediaPlayer.isPlaying();
+
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        EventBus.getDefault().post(new MessageEvent(Messages.PLAY_SOUND_HAS_ENDED, null));
+                    }
+                });
                 Toast.makeText(MainActivity.this, "Recording Playing",
                         Toast.LENGTH_LONG).show();
                 break;
@@ -157,26 +187,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonStopPlayingRecording.setOnClickListener(this);
         buttonStopPlayingRecording.setEnabled(false);
     }
-
-    public void MediaRecorderReady(){
-        mediaRecorder=new MediaRecorder();
+    public  void MediaRecorderReady(){
+        mediaRecorder = new MediaRecorder();
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         mediaRecorder.setOutputFile(AudioSavePathInDevice);
     }
 
-    public String CreateRandomAudioFileName(int string){
-        StringBuilder stringBuilder = new StringBuilder( string );
-        int i = 0 ;
-        while(i < string ) {
-            stringBuilder.append(RandomAudioFileName.
-                    charAt(random.nextInt(RandomAudioFileName.length())));
-
-            i++ ;
-        }
-        return stringBuilder.toString();
-    }
 
     private void requestPermission() {
         ActivityCompat.requestPermissions(MainActivity.this, new
@@ -206,14 +224,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /*public boolean checkPermission() {
-        int result = ContextCompat.checkSelfPermission(getApplicationContext(),
-                WRITE_EXTERNAL_STORAGE);
-        int result1 = ContextCompat.checkSelfPermission(getApplicationContext(),
-                RECORD_AUDIO);
-        return result == PackageManager.PERMISSION_GRANTED &&
-                result1 == PackageManager.PERMISSION_GRANTED;
-    }*/
 
     @Override
     public void onStart() {
