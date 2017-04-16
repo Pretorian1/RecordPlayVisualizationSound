@@ -2,33 +2,29 @@ package com.example.max.recordplayvisualizationsound.Utils;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.media.MediaExtractor;
-import android.media.MediaFormat;
-import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 
 import com.example.max.recordplayvisualizationsound.Objects.Complex;
 import com.example.max.recordplayvisualizationsound.Objects.FFT;
+import com.example.max.recordplayvisualizationsound.Objects.FrequencyGraphPoints;
 import com.example.max.recordplayvisualizationsound.Objects.FrequencyGraphPoint;
 import com.google.gson.Gson;
 
 import org.greenrobot.eventbus.EventBus;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.core.Persister;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
+
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -215,4 +211,21 @@ public class Utils {
        String xmlString = sw.toString();
        return xmlString;
    }*/
+  public static void objectToXML(List<FrequencyGraphPoint> frequencyGraphPointList)  {
+      FrequencyGraphPoints frequencyGrapPoints  = new FrequencyGraphPoints();
+      frequencyGrapPoints.setFrequencyGraphPointList(frequencyGraphPointList);
+      String path =Utils.checkCreateFolder(Utils.POINTS_DIR) +
+              Utils.CreateRandomAudioFileName(5) + "Points.xml";
+      File xmlFile = new File(path);
+      try
+      {
+          Serializer serializer = new Persister();
+          serializer.write(frequencyGrapPoints, xmlFile);
+          EventBus.getDefault().post(new MessageEvent(Messages.CONVERT_FREQUENCY_TO_XML_HAS_ENDED,null));
+      }
+      catch (Exception e)
+      {
+          e.printStackTrace();
+      }
+  }
 }

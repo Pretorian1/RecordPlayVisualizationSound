@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
-import javax.xml.bind.JAXBException;
+
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -96,6 +96,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 buttonPlay.setEnabled(true);
                 buttonToJSONXML.setEnabled(true);
+                break;
+            case CONVERT_FREQUENCY_TO_XML_HAS_ENDED:
+                Toast.makeText(this, "Save xml file successfully",Toast.LENGTH_SHORT).show();
                 break;
 
         }
@@ -199,6 +202,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.button_to_json_xml:
                 Toast.makeText(this, "Save me ", Toast.LENGTH_SHORT).show();
+                Utils.objectToXML(frequencyGraphPointArrayList);
                 break;
 
         }
