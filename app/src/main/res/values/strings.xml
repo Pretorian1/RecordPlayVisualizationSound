@@ -5,4 +5,5 @@
     <string name="stop">STOP</string>
     <string name="play">Play</string>
     <string name="stop_playing_recording">STOP PLAYING RECORDING</string>
+    <string name="save_coordinates_to_json_and_xml">Save To JSON, XML</string>
 </resources>

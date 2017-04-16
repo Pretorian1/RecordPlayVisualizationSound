@@ -32,7 +32,7 @@
         android:id="@+id/button_play"
         android:layout_alignTop="@+id/button_stop"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
+
         />
 
     <Button
@@ -40,10 +40,21 @@
         android:layout_height="wrap_content"
         android:text="@string/stop_playing_recording"
         android:id="@+id/button_stop_playing_recording"
+        android:layout_marginTop="21dp"
         android:layout_below="@+id/button_stop"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="10dp"
-        />
+        android:layout_toStartOf="@+id/button_play" />
+
+    <Button
+        android:id="@+id/button_to_json_xml"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:enabled="false"
+        android:text="@string/save_coordinates_to_json_and_xml"
+        android:visibility="visible"
+        android:layout_below="@+id/button_stop_playing_recording"
+        android:layout_centerHorizontal="true" />
+
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
         android:layout_width="wrap_content"
@@ -56,5 +67,7 @@
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true">
     </com.google.android.gms.ads.AdView>
+
+
 
 </RelativeLayout>

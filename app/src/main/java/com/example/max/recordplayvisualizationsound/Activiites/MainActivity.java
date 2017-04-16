@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.max.recordplayvisualizationsound.Objects.FrequencyGraphPoint;
 import com.example.max.recordplayvisualizationsound.R;
 import com.example.max.recordplayvisualizationsound.Utils.MessageEvent;
 import com.example.max.recordplayvisualizationsound.Utils.Messages;
@@ -25,7 +26,10 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Random;
+
+import javax.xml.bind.JAXBException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -46,13 +50,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindView(R.id.button_stop_playing_recording)
     Button buttonStopPlayingRecording;
 
-    String AudioSavePathInDevice = null;//todo refactor later!!!
-    MediaRecorder mediaRecorder ;
+    @BindView(R.id.button_to_json_xml)
+    Button buttonToJSONXML;
+
+    private static String AudioSavePathInDevice = null;//todo refactor later!!!
+    private static MediaRecorder mediaRecorder ;
    // Random random ;
   //  String RandomAudioFileName = "ABCDEFGHIJKLMNOP";
     public static final int RequestPermissionCode = 1;
     MediaPlayer mediaPlayer ;
     double [] frequency1;
+    ArrayList<FrequencyGraphPoint> frequencyGraphPointArrayList;
+    int recordDuration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {//todo refactor later!!!
@@ -69,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Subscribe
-    public void onMessageEvent(MessageEvent event){
+    public void onMessageEvent(MessageEvent event) {
         switch (event.message){
             case PLAY_SOUND_HAS_ENDED:
                 buttonPlay.setEnabled(true);
@@ -79,6 +88,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case BLOCK_STOP_HAS_ENDED:
                 buttonStop.setEnabled(true);
                 break;
+            case DATA_FOR_GRAPH_READY:
+                frequencyGraphPointArrayList = (ArrayList<FrequencyGraphPoint>) event.link;
+                String jsonTest = Utils.objectToJSON(frequencyGraphPointArrayList);
+            //    String xmlTest = Utils.objectToXML(frequencyGraphPointArrayList);
+
+
+                buttonPlay.setEnabled(true);
+                buttonToJSONXML.setEnabled(true);
+                break;
 
         }
     }
@@ -87,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v){
         switch(v.getId()){
             case R.id.button_record:
+                buttonToJSONXML.setEnabled(false);
+                buttonPlay.setEnabled(false);
                 if(Utils.checkPermission(getApplicationContext())) {
 
                     AudioSavePathInDevice =
@@ -129,20 +149,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.button_stop:
                 mediaRecorder.stop();
                 buttonStop.setEnabled(false);
-                buttonPlay.setEnabled(true);
+               // buttonPlay.setEnabled(true);
                 buttonRecord.setEnabled(true);
                 buttonStopPlayingRecording.setEnabled(false);
-               byte [] bytes = Utils.convert3gpToByteArray(AudioSavePathInDevice);
+                byte [] bytes = Utils.convert3gpToByteArray(AudioSavePathInDevice);
                 frequency1 = Utils.calculateFFT(bytes);
+              //  recordDuration = Utils.getDuration(AudioSavePathInDevice);
+             //   Utils.prepareDataForGraph(frequency1,recordDuration);
                 Toast.makeText(MainActivity.this, "Recording Completed",
                         Toast.LENGTH_LONG).show();
+              //  buttonPlay.setEnabled(true);
+                recordDuration = prepareMediaPlayerGetDuration(mediaPlayer,AudioSavePathInDevice);
+                Utils.prepareDataForGraph(frequency1,recordDuration);
                 break;
             case R.id.button_play:
+
                 buttonStop.setEnabled(false);
                 buttonRecord.setEnabled(false);
                 buttonPlay.setEnabled(false);
                 buttonStopPlayingRecording.setEnabled(true);
-
                 mediaPlayer = new MediaPlayer();
                 try {
                     mediaPlayer.setDataSource(AudioSavePathInDevice);
@@ -150,9 +175,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                int time = mediaPlayer.getDuration();
                 mediaPlayer.start();
-
                 mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                     @Override
                     public void onCompletion(MediaPlayer mediaPlayer) {
@@ -174,6 +197,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     MediaRecorderReady();
                 }
                 break;
+            case R.id.button_to_json_xml:
+                Toast.makeText(this, "Save me ", Toast.LENGTH_SHORT).show();
+                break;
 
         }
     }
@@ -186,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonPlay.setEnabled(false);
         buttonStopPlayingRecording.setOnClickListener(this);
         buttonStopPlayingRecording.setEnabled(false);
+        buttonToJSONXML.setOnClickListener(this);
     }
     public  void MediaRecorderReady(){
         mediaRecorder = new MediaRecorder();
@@ -193,6 +220,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
         mediaRecorder.setOutputFile(AudioSavePathInDevice);
+    }
+
+    private int prepareMediaPlayerGetDuration(MediaPlayer mediaPlayer, String AudioSavePathInDevice){
+        mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(AudioSavePathInDevice);
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return mediaPlayer.getDuration();
     }
 
 

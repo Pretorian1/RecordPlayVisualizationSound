@@ -4,19 +4,31 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 
 import com.example.max.recordplayvisualizationsound.Objects.Complex;
 import com.example.max.recordplayvisualizationsound.Objects.FFT;
+import com.example.max.recordplayvisualizationsound.Objects.FrequencyGraphPoint;
+import com.google.gson.Gson;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -29,6 +41,7 @@ public class Utils {
 
     public static final String RECORDS_DIR = "/RecordPlayVisualizationSound/Records/";
     public static final String POINTS_DIR = "/RecordPlayVisualizationSound/Points/";
+    public static final int TIME_FRAME_FOR_FREQUENCY = 250;
 
     public static boolean checkPermission(Context gottenApplicationContext) {
         int result = ContextCompat.checkSelfPermission(gottenApplicationContext,
@@ -60,6 +73,17 @@ public class Utils {
         }
         return stringBuilder.toString();
     }
+
+    /*public static int prepareMediaPlayerGetDuration(MediaPlayer mediaPlayer, String AudioSavePathInDevice){
+        mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(AudioSavePathInDevice);
+            mediaPlayer.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return mediaPlayer.getDuration();
+    }*/
 
    /* public static void MediaRecorderReady(MediaRecorder mediaRecorder, String AudioSavePathInDevice){
         mediaRecorder = new MediaRecorder();
@@ -128,19 +152,67 @@ public class Utils {
         y = FFT.fft(complexSignal);
 
         mMaxFFTSample = 0.0;
-       // mPeakPos = 0;
         for(int i = 0; i < (mNumberOfFFTPoints/2); i++)
         {
             absSignal[i] = Math.sqrt(Math.pow(y[i].re(), 2) + Math.pow(y[i].im(), 2));
             if(absSignal[i] > mMaxFFTSample)
             {
                 mMaxFFTSample = absSignal[i];
-              //  mPeakPos = i;
             }
         }
-
         return absSignal;
-
     }
-
+    public static List<FrequencyGraphPoint> prepareDataForGraph(double[] frequency, int trackDuration){
+        int timeForGraph = 0;
+        List<FrequencyGraphPoint> dataForGraph = new ArrayList<FrequencyGraphPoint>();
+        int frequencyDataLength = frequency.length;
+        int timeCoefficient = trackDuration/TIME_FRAME_FOR_FREQUENCY;
+        FrequencyGraphPoint tempFrequencyGraphPoint;
+        int compressionCoefficient = frequencyDataLength/timeCoefficient;
+        int frequencyCompressedSum;
+        for (int i =0; i<timeCoefficient; i++){
+            frequencyCompressedSum = 0;
+            tempFrequencyGraphPoint = new FrequencyGraphPoint();
+            tempFrequencyGraphPoint.setPointX(timeForGraph);
+            timeForGraph+=TIME_FRAME_FOR_FREQUENCY;
+            for(int j = 0; j<compressionCoefficient;j++){
+                frequencyCompressedSum+=frequency[i*compressionCoefficient+j];
+            }
+            if(frequencyCompressedSum == 0){
+                tempFrequencyGraphPoint.setPointY(0);
+            }
+            else{
+            tempFrequencyGraphPoint.setPointY(frequencyCompressedSum/compressionCoefficient);
+            }
+            dataForGraph.add(tempFrequencyGraphPoint);
+        }
+        EventBus.getDefault().post(new MessageEvent(Messages.DATA_FOR_GRAPH_READY, dataForGraph));
+        return  dataForGraph;
+    }
+   public static String objectToJSON(List<FrequencyGraphPoint> frequencyGraphPointList){
+       Gson gson = new Gson();
+       return gson.toJson(frequencyGraphPointList);
+   }
+  /* public static String objectToXML(List<FrequencyGraphPoint> frequencyGraphPointList)  {
+       JAXBContext jaxbContext = null;
+       try {
+           jaxbContext = JAXBContext.newInstance(List.class);
+       } catch (JAXBException e) {
+           e.printStackTrace();
+       }
+       Marshaller jaxbMarshaller = null;
+       try {
+           jaxbMarshaller = jaxbContext.createMarshaller();
+       } catch (JAXBException e) {
+           e.printStackTrace();
+       }
+       StringWriter sw = new StringWriter();
+       try {
+           jaxbMarshaller.marshal(frequencyGraphPointList, sw);
+       } catch (JAXBException e) {
+           e.printStackTrace();
+       }
+       String xmlString = sw.toString();
+       return xmlString;
+   }*/
 }
