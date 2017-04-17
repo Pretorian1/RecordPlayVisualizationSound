@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -185,9 +186,22 @@ public class Utils {
         EventBus.getDefault().post(new MessageEvent(Messages.DATA_FOR_GRAPH_READY, dataForGraph));
         return  dataForGraph;
     }
-   public static String objectToJSON(List<FrequencyGraphPoint> frequencyGraphPointList){
+   public static void objectToJSON(List<FrequencyGraphPoint> frequencyGraphPointList, Context context){
        Gson gson = new Gson();
-       return gson.toJson(frequencyGraphPointList);
+       String tempString = gson.toJson(frequencyGraphPointList);
+       FileOutputStream outputStream;
+       String path =Utils.checkCreateFolder(Utils.POINTS_DIR) +
+               Utils.CreateRandomAudioFileName(5) + "Points.json";
+
+       try {
+          // outputStream = context.openFileOutput(path,Context.MODE_PRIVATE);
+           outputStream = new FileOutputStream(new File(path));
+           outputStream.write(tempString.getBytes());
+           outputStream.close();
+           EventBus.getDefault().post(new MessageEvent(Messages.CONVERT_FREQUENCY_TO_JSON_HAS_ENDED,null));
+       } catch (Exception e) {
+           e.printStackTrace();
+       }
    }
   /* public static String objectToXML(List<FrequencyGraphPoint> frequencyGraphPointList)  {
        JAXBContext jaxbContext = null;

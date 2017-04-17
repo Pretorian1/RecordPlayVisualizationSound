@@ -32,8 +32,6 @@ dependencies {
     compile 'com.google.firebase:firebase-ads:10.0.0'
     compile 'org.greenrobot:eventbus:3.0.0'
     compile 'com.google.code.gson:gson:2.8.0'
-    //  compile group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.4'
-    //  compile group: 'org.simpleframework', name: 'simple-xml', version: '2.7.1'
     compile 'com.jakewharton:butterknife:8.5.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
     testCompile 'junit:junit:4.12'
