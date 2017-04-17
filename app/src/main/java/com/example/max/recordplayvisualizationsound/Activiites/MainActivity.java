@@ -4,10 +4,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -23,7 +21,6 @@ import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -35,9 +32,6 @@ import org.greenrobot.eventbus.Subscribe;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
-
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -64,26 +58,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @BindView(R.id.chartMain)
     BarChart frequencyBarChart;
 
-    private static String AudioSavePathInDevice = null;//todo refactor later!!!
+    private static String AudioSavePathInDevice = null;
     private static MediaRecorder mediaRecorder ;
-   // Random random ;
-  //  String RandomAudioFileName = "ABCDEFGHIJKLMNOP";
     public static final int RequestPermissionCode = 1;
     MediaPlayer mediaPlayer ;
     double [] frequency1;
     ArrayList<FrequencyGraphPoint> frequencyGraphPointArrayList;
     int recordDuration;
     public static int barCounter = 1;
-     public static BarData data;
+    public static BarData data;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {//todo refactor later!!!
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initOnClickListeners();
-       // random = new Random();
-      //  FirebaseCrash.report(new Exception("My first Android non-fatal error"));//crash reporting
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-5405208829283027~3111027393");
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
@@ -104,10 +94,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case DATA_FOR_GRAPH_READY:
                 frequencyGraphPointArrayList = (ArrayList<FrequencyGraphPoint>) event.link;
-
-            //    String xmlTest = Utils.objectToXML(frequencyGraphPointArrayList);
-
-
                 buttonPlay.setEnabled(true);
                 buttonToJSONXML.setEnabled(true);
                 break;
@@ -119,9 +105,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Toast.makeText(this, "Saving json file was successfully",Toast.LENGTH_SHORT).show();
                 break;
             case TIME_FREEZE_HAS_ENDED:
-                /*FrequencyGraphPoint tempFrequencyGraphPoint = frequencyGraphPointArrayList.get(barCounter);
-                data.addEntry(new BarEntry((float) tempFrequencyGraphPoint.getPointX(),(float) tempFrequencyGraphPoint.getPointY()),barCounter);
-                data.notifyDataChanged();*/
                 if(barCounter==0){
                 frequencyBarChart.invalidate();
                     barCounter++;
@@ -131,21 +114,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     frequencyBarChart.setData(data);
                     frequencyBarChart.invalidate();
                     barCounter++;
-
-                    Handler handler = new Handler();
-                    Runnable r = new Runnable(){
-                        public void run() {
-                            try {
-
-                                Thread.sleep(Utils.TIME_FRAME_FOR_FREQUENCY);
-                                EventBus.getDefault().post(new MessageEvent(Messages.TIME_FREEZE_HAS_ENDED,null));
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    };
-                    handler.post(r);
+                    startTimeFrameHandler();
                 }
                 else if(barCounter == frequencyGraphPointArrayList.size()){
                     barCounter = 1;
@@ -194,8 +163,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     };
                     handler.post(r);
-                   // buttonStop.setEnabled(true);
-
                     Toast.makeText(MainActivity.this, "Recording started",
                             Toast.LENGTH_LONG).show();
                 } else {
@@ -205,16 +172,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.button_stop:
                 mediaRecorder.stop();
                 buttonStop.setEnabled(false);
-               // buttonPlay.setEnabled(true);
                 buttonRecord.setEnabled(true);
                 buttonStopPlayingRecording.setEnabled(false);
                 byte [] bytes = Utils.convert3gpToByteArray(AudioSavePathInDevice);
                 frequency1 = Utils.calculateFFT(bytes);
-              //  recordDuration = Utils.getDuration(AudioSavePathInDevice);
-             //   Utils.prepareDataForGraph(frequency1,recordDuration);
                 Toast.makeText(MainActivity.this, "Recording Completed",
                         Toast.LENGTH_LONG).show();
-              //  buttonPlay.setEnabled(true);
                 recordDuration = prepareMediaPlayerGetDuration(mediaPlayer,AudioSavePathInDevice);
                 Utils.prepareDataForGraph(frequency1,recordDuration);
                 break;
@@ -244,23 +207,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 data = new BarData(getDataSet(frequencyGraphPointArrayList,barCounter));
                 frequencyBarChart.setData(data);
                 frequencyBarChart.invalidate();
-                Handler handler = new Handler();
-                Runnable r = new Runnable(){
-                    public void run() {
-                        try {
-
-                            Thread.sleep(Utils.TIME_FRAME_FOR_FREQUENCY);
-                            EventBus.getDefault().post(new MessageEvent(Messages.TIME_FREEZE_HAS_ENDED,null));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                };
-                handler.post(r);
-               // frequencyBarChart.setDescription("My Chart");
-               // frequencyBarChart.animateXY(2000, 2000);
-
+                startTimeFrameHandler();
                 break;
             case R.id.button_stop_playing_recording:
                 buttonStop.setEnabled(false);
@@ -365,11 +312,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             valueSet1.add(barEntry);
 
         }
-      /*  for(FrequencyGraphPoint fGP:frequencyGraphPointList){
-            BarEntry barEntry = new BarEntry((float) fGP.getPointX(), (float) fGP.getPointY()); // Jan
-            valueSet1.add(barEntry);
-        }*/
-
         BarDataSet barDataSet1 = new BarDataSet(valueSet1, "Frequency");
         barDataSet1.setBarBorderWidth(3);
         barDataSet1.setBarBorderColor(Color.rgb(0, 155, 0));
@@ -378,12 +320,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dataSets.add(barDataSet1);
         return dataSets;
     }
+    public void startTimeFrameHandler(){
 
-    private ArrayList<String> getXAxisValues(List<FrequencyGraphPoint> frequencyGraphPointList) {
-        ArrayList<String> xAxis = new ArrayList<>();
-        for(FrequencyGraphPoint fGP:frequencyGraphPointList){
-           xAxis.add(""+fGP.getPointX());
-        }
-        return xAxis;
+        Handler handler = new Handler();
+        Runnable r = new Runnable(){
+            public void run() {
+                try {
+                    Thread.sleep(Utils.TIME_FRAME_FOR_FREQUENCY);
+                    EventBus.getDefault().post(new MessageEvent(Messages.TIME_FREEZE_HAS_ENDED,null));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        };
+        handler.post(r);
     }
 }

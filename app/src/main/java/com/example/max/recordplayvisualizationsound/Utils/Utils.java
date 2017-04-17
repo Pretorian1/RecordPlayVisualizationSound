@@ -71,38 +71,9 @@ public class Utils {
         return stringBuilder.toString();
     }
 
-    /*public static int prepareMediaPlayerGetDuration(MediaPlayer mediaPlayer, String AudioSavePathInDevice){
-        mediaPlayer = new MediaPlayer();
-        try {
-            mediaPlayer.setDataSource(AudioSavePathInDevice);
-            mediaPlayer.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return mediaPlayer.getDuration();
-    }*/
-
-   /* public static void MediaRecorderReady(MediaRecorder mediaRecorder, String AudioSavePathInDevice){
-        mediaRecorder = new MediaRecorder();
-        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
-        mediaRecorder.setOutputFile(AudioSavePathInDevice);
-    }*/
 
     public static byte[] convert3gpToByteArray(String AudioSavePathInDevice ){
 
-      /*  MediaExtractor mex = new MediaExtractor();
-        try {
-            mex.setDataSource(AudioSavePathInDevice);// the adresss location of the sound on sdcard.
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        MediaFormat mf = mex.getTrackFormat(0);
-        int duration = mf.getInteger(MediaFormat.KEY_DURATION);
-        int sampleRate = mf.getInteger(MediaFormat.KEY_SAMPLE_RATE);*/
         FileInputStream fileInputStream = null;
 
         try {
@@ -141,7 +112,6 @@ public class Utils {
         double[] absSignal = new double[mNumberOfFFTPoints/2];
 
         for(int i = 0; i < mNumberOfFFTPoints; i++){
-           // temp = (double)((signal[2*i] & 0xFF) | (signal[2*i+1] << 8)) / 32768.0F;
             temp = (double)((tempSignal[2*i] & 0xFF) | (tempSignal[2*i+1] << 8)) / 32768.0F;
             complexSignal[i] = new Complex(temp,0.0);
         }
@@ -194,7 +164,6 @@ public class Utils {
                Utils.CreateRandomAudioFileName(5) + "Points.json";
 
        try {
-          // outputStream = context.openFileOutput(path,Context.MODE_PRIVATE);
            outputStream = new FileOutputStream(new File(path));
            outputStream.write(tempString.getBytes());
            outputStream.close();
@@ -203,28 +172,7 @@ public class Utils {
            e.printStackTrace();
        }
    }
-  /* public static String objectToXML(List<FrequencyGraphPoint> frequencyGraphPointList)  {
-       JAXBContext jaxbContext = null;
-       try {
-           jaxbContext = JAXBContext.newInstance(List.class);
-       } catch (JAXBException e) {
-           e.printStackTrace();
-       }
-       Marshaller jaxbMarshaller = null;
-       try {
-           jaxbMarshaller = jaxbContext.createMarshaller();
-       } catch (JAXBException e) {
-           e.printStackTrace();
-       }
-       StringWriter sw = new StringWriter();
-       try {
-           jaxbMarshaller.marshal(frequencyGraphPointList, sw);
-       } catch (JAXBException e) {
-           e.printStackTrace();
-       }
-       String xmlString = sw.toString();
-       return xmlString;
-   }*/
+
   public static void objectToXML(List<FrequencyGraphPoint> frequencyGraphPointList)  {
       FrequencyGraphPoints frequencyGrapPoints  = new FrequencyGraphPoints();
       frequencyGrapPoints.setFrequencyGraphPointList(frequencyGraphPointList);
